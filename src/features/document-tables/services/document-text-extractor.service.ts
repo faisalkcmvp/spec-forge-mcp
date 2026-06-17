@@ -10,6 +10,45 @@ import { ExtractedDocumentText, SupportedDocumentType } from '../document-tables
 @Injectable()
 export class DocumentTextExtractorService {
   async extract(sourcePath: string): Promise<ExtractedDocumentText> {
+    if (sourcePath.startsWith('http://') || sourcePath.startsWith('https://')) {
+      return this.extractFromUrl(sourcePath);
+    }
+
+    return this.extractFromFile(sourcePath);
+  }
+
+  private async extractFromUrl(url: string): Promise<ExtractedDocumentText> {
+    const urlObj = new URL(url);
+    const extension = path.extname(urlObj.pathname).toLowerCase();
+    const type = this.detectDocumentType(extension);
+
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch URL (${response.status}): ${url}`);
+    }
+
+    const arrayBuffer = await response.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+    const text = await this.extractTextByType(type, buffer);
+
+    if (!text.trim()) {
+      throw new Error(`No readable text was extracted from: ${url}`);
+    }
+
+    const fileName = path.basename(urlObj.pathname) || 'document';
+
+    return {
+      type,
+      text,
+      metadata: {
+        absolutePath: url,
+        fileName,
+        sizeBytes: buffer.byteLength,
+      },
+    };
+  }
+
+  private async extractFromFile(sourcePath: string): Promise<ExtractedDocumentText> {
     const absolutePath = path.resolve(sourcePath);
     const stats = await fs.stat(absolutePath);
 
@@ -20,7 +59,7 @@ export class DocumentTextExtractorService {
     const extension = path.extname(absolutePath).toLowerCase();
     const buffer = await fs.readFile(absolutePath);
     const type = this.detectDocumentType(extension);
-    const text = await this.extractTextByType(type, buffer, absolutePath);
+    const text = await this.extractTextByType(type, buffer);
 
     if (!text.trim()) {
       throw new Error(`No readable text was extracted from: ${absolutePath}`);
@@ -63,14 +102,14 @@ export class DocumentTextExtractorService {
     }
   }
 
-  private async extractTextByType(type: SupportedDocumentType, buffer: Buffer, absolutePath: string): Promise<string> {
+  private async extractTextByType(type: SupportedDocumentType, buffer: Buffer): Promise<string> {
     if (type === 'pdf') {
       const result = await pdfParse(buffer);
       return result.text;
     }
 
     if (type === 'docx') {
-      const result = await mammoth.extractRawText({ path: absolutePath });
+      const result = await mammoth.extractRawText({ buffer });
       return result.value;
     }
 

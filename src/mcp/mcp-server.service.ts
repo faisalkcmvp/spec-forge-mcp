@@ -33,9 +33,9 @@ export class McpServerService {
       {
         title: 'Extract Document Tables',
         description:
-          'Convert a PDF, DOCX, text, markdown, CSV, JSON, or HTML document into table data and write one JSON output file.',
+          'Convert a PDF, DOCX, text, markdown, CSV, JSON, or HTML document into table data and write one JSON output file. The source can be a local file path or an HTTP/HTTPS URL.',
         inputSchema: {
-          sourcePath: z.string().min(1).describe('Path to the source document on the local filesystem.'),
+          sourcePath: z.string().min(1).describe('Path to the source document on the local filesystem, or an HTTP/HTTPS URL (e.g. a raw GitHub link to a .md or .txt file).'),
           outputPath: z
             .string()
             .min(1)

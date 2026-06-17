@@ -8,4 +8,7 @@ services:
     environment:
       AI_API_KEY: ${AI_API_KEY}
       AI_BASE_URL: ${AI_BASE_URL}
+      DEFAULT_TABLE_OUTPUT_PATH: /app/output/document-tables.json
+    volumes:
+      - ./output:/app/output
     restart: unless-stopped

@@ -4,3 +4,4 @@ dist/
 *.log
 output/
 data/
+docker-compose.override.yml

@@ -1,13 +1,11 @@
-version: '3.8'
 services:
   spec-forge-mcp:
-    build: .
+    image: ghcr.io/faisalkcmvp/spec-forge-mcp:latest
     ports:
       - "3000:3000"
     env_file:
       - .env
     environment:
-      # Example: override or supply AI provider variables here
       AI_API_KEY: ${AI_API_KEY}
       AI_BASE_URL: ${AI_BASE_URL}
     restart: unless-stopped
